@@ -66,8 +66,10 @@ download_all() {
   # Args:
   #   $1 = out_dir (directory containing manifest and for storing TSVs)
   #   $2 = api_base
+  #   $3 = [optional] count_limit (number of panels to download, for testing)
   local out_dir="$1"
   local api_base="$2"
+  local count_limit="${3:-0}"  # 0 = no limit
   local manifest="$out_dir/panel_manifest.tsv"
   local panels_dir="$out_dir/panels"
 
@@ -92,6 +94,12 @@ download_all() {
       die "Failed to download panel ${panel_id} (v${version}) from ${url}"
     fi
     sleep 0.1  # uncomment to be gentle on the server
+
+    # stop early if limit is reached (only if count_limit > 0)
+    if (( count_limit > 0 && downloaded >= count_limit )); then
+      echo "Reached count limit: $count_limit (stopping early)"
+      break
+    fi
   done
 }
 
@@ -171,7 +179,7 @@ main() {
   local manifest="$out_dir/panel_manifest.tsv"
 
   panelapp_panels_to_tsv "$manifest" "$api_base" || die "Failed to create panel manifest"
-  download_all "$out_dir" "$api_base" || die "Failed to download panel TSVs"
+  download_all "$out_dir" "$api_base" 10 || die "Failed to download panel TSVs"
   concat_tsvs "$out_dir" || die "Failed to concatenate panel TSVs"
 
   echo

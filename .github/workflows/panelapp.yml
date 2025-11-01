@@ -4,7 +4,10 @@ on:
   schedule:
     # Runs every Monday at 00:00 UTC
     - cron: "0 0 * * 1"
-  workflow_dispatch: # allows manual trigger from Actions tab
+  workflow_dispatch:  # allow manual trigger from the Actions tab
+
+permissions:
+  contents: write  # required to create GitHub releases
 
 jobs:
   update-panels:
@@ -16,26 +19,30 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt-get update
+          sudo apt-get update -qq
           sudo apt-get install -y jq curl
+
+      - name: Set date variable
+        run: echo "DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
 
       - name: Run PanelApp export script
         run: |
-          OUTDIR="panelapp_$(date +'%Y-%m-%d')"
+          OUTDIR="panelapp_${DATE}"
           rm -rf "$OUTDIR"
           ./download_panelapp_db.sh "$OUTDIR"
 
-      - name: Prepare release files
+      - name: Verify generated files
         run: |
-          ls -lh panelapp_$(date +'%Y-%m-%d')
+          echo "Contents of panelapp_${DATE}:"
+          ls -lh "panelapp_${DATE}"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "PanelApp_$(date +'%Y-%m-%d')"
-          name: "PanelApp_$(date +'%Y-%m-%d')"
+          tag_name: "PanelApp_${{ env.DATE }}"
+          name: "PanelApp_${{ env.DATE }}"
           files: |
-            panelapp_$(date +'%Y-%m-%d')/panel_manifest.tsv
-            panelapp_$(date +'%Y-%m-%d')/all_panels.tsv
+            panelapp_${{ env.DATE }}/panel_manifest.tsv
+            panelapp_${{ env.DATE }}/all_panels.tsv
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
