@@ -23,7 +23,6 @@ jobs:
         run: |
           OUTDIR="panelapp_$(date +'%Y-%m-%d')"
           rm -rf "$OUTDIR"
-          mkdir -p "$OUTDIR"
           ./download_panelapp_db.sh "$OUTDIR"
 
       - name: Prepare release files
