@@ -1,0 +1,41 @@
+name: Weekly PanelApp Update
+
+on:
+  schedule:
+    # Runs every Monday at 00:00 UTC
+    - cron: "0 0 * * 1"
+  workflow_dispatch: # allows manual trigger from Actions tab
+
+jobs:
+  update-panels:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq curl
+
+      - name: Run PanelApp export script
+        run: |
+          OUTDIR="panelapp_$(date +'%Y-%m-%d')"
+          mkdir -p "$OUTDIR"
+          ./download_panelapp_db.sh "$OUTDIR"
+
+      - name: Prepare release files
+        run: |
+          ls -lh panelapp_$(date +'%Y-%m-%d')
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "PanelApp_$(date +'%Y-%m-%d')"
+          name: "PanelApp_$(date +'%Y-%m-%d')"
+          files: |
+            panelapp_$(date +'%Y-%m-%d')/panel_manifest.tsv
+            panelapp_$(date +'%Y-%m-%d')/all_panels.tsv
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
