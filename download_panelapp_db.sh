@@ -179,7 +179,7 @@ main() {
   local manifest="$out_dir/panel_manifest.tsv"
 
   panelapp_panels_to_tsv "$manifest" "$api_base" || die "Failed to create panel manifest"
-  download_all "$out_dir" "$api_base" 10 || die "Failed to download panel TSVs"
+  download_all "$out_dir" "$api_base" || die "Failed to download panel TSVs"
   concat_tsvs "$out_dir" || die "Failed to concatenate panel TSVs"
 
   echo
